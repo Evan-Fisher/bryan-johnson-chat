@@ -2,12 +2,10 @@ import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
-import OpenAI from "openai";
 import QDrant from "../clients/qdrant";
+import OpenAI from "../clients/openai";
 
 require("dotenv").config();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function loadDocuments() {
   const directoryLoader = new DirectoryLoader("data/books/", {
@@ -40,7 +38,7 @@ async function generateEmbeddings(chunks: any) {
   //   chunks = chunks.slice(0, 2);
   const textOfChunks = chunks.map((chunk: any) => chunk.pageContent); // Needs to be less than 2048 items in array https://platform.openai.com/docs/api-reference/embeddings/create
   try {
-    const { data } = await openai.embeddings.create({
+    const { data } = await OpenAI.embeddings.create({
       model: "text-embedding-3-small",
       input: textOfChunks,
     });
@@ -48,7 +46,10 @@ async function generateEmbeddings(chunks: any) {
     embeddings = data.map(({ embedding, index }) => ({
       id: index,
       vector: embedding,
-      payload: chunks[index].metadata,
+      payload: {
+        text: chunks[index].pageContent,
+        metadata: chunks[index].metadata,
+      },
     }));
   } catch (error) {
     console.error(error);
@@ -71,13 +72,13 @@ async function splitText(documents: any) {
   return chunks;
 }
 
-// generateDataStore()
-//   .then((documents: any) => {
-//     console.log(documents);
-//   })
-//   .catch((error: any) => {
-//     console.error(error);
-//   });
+generateDataStore()
+  .then((documents: any) => {
+    console.log(documents);
+  })
+  .catch((error: any) => {
+    console.error(error);
+  });
 
 // CREATED
 // QDrant.createCollection("bryan_johnson_data", {
