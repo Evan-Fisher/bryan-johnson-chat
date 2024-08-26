@@ -1,16 +1,26 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { Stack, StackProps } from "aws-cdk-lib";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
-export class BryanJohnsonChatStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+import { Construct } from "constructs";
+export class BryanJohnsonChatStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    // Define the Lambda function
+    const helloLambda = new lambda.Function(this, "HelloHandler", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset("lambda"),
+      handler: "api.handler",
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'BryanJohnsonChatQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const api = new apigateway.LambdaRestApi(this, "HelloWorldApi", {
+      handler: helloLambda,
+      proxy: false,
+    });
+
+    // Define the '/hello' resource with a GET method
+    const helloResource = api.root.addResource("hello");
+    helloResource.addMethod("GET");
   }
 }
